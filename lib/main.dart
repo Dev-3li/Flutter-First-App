@@ -472,10 +472,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  String _formatDate(DateTime date) {
-    return '${date.year}/${date.month}/${date.day}';
-  }
-
   void _showAddTransactionDialog() {
     if (people.isEmpty) {
       showDialog(
