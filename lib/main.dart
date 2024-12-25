@@ -35,16 +35,14 @@ class _MyAppState extends State<MyApp> {
         fontFamily: 'Cairo',
       ),
       darkTheme: ThemeData(
-        colorScheme: ColorScheme.dark(
-          primary: const Color(0xFFFFB74D),
-          secondary: const Color(0xFF64B5F6),
-          surface: const Color(0xFF1E1E1E),
-          background: const Color(0xFF121212),
-          error: const Color(0xFFCF6679),
+        colorScheme: const ColorScheme.dark(
+          primary: Color(0xFFFFB74D),
+          secondary: Color(0xFF64B5F6),
+          surface: Color(0xFF1E1E1E),
+          error: Color(0xFFCF6679),
           onPrimary: Colors.black,
           onSecondary: Colors.black,
           onSurface: Colors.white,
-          onBackground: Colors.white,
           onError: Colors.black,
           brightness: Brightness.dark,
         ),
@@ -326,7 +324,7 @@ class _HomePageState extends State<HomePage> {
                             return Card(
                               child: InkWell(
                                 onTap: () {
-                                  // TODO: عرض تفاصيل العميل
+                                  _showPersonDetails(person);
                                 },
                                 borderRadius: BorderRadius.circular(24),
                                 child: Padding(
@@ -560,6 +558,165 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
     );
+  }
+
+  void _showPersonDetails(Person person) {
+    final personTransactions = transactions.where((t) => t.person == person).toList();
+    double balance = 0;
+    for (var transaction in personTransactions) {
+      if (transaction.type == TransactionType.credit) {
+        balance += transaction.amount;
+      } else {
+        balance -= transaction.amount;
+      }
+    }
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.75,
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Text(
+                        person.name[0],
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    person.name,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  if (person.phone != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      person.phone!,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: (balance >= 0 ? Colors.green : Colors.red).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Text(
+                      '${balance.abs()} ج.م ${balance >= 0 ? 'دائن' : 'مدين'}',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: balance >= 0 ? Colors.green : Colors.red,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: personTransactions.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.receipt_long_outlined,
+                            size: 64,
+                            color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'لا توجد معاملات',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: personTransactions.length,
+                      itemBuilder: (context, index) {
+                        final transaction = personTransactions[index];
+                        return Card(
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: transaction.type == TransactionType.credit
+                                  ? Colors.green.withOpacity(0.1)
+                                  : Colors.red.withOpacity(0.1),
+                              child: Icon(
+                                transaction.type == TransactionType.credit
+                                    ? Icons.arrow_upward
+                                    : Icons.arrow_downward,
+                                color: transaction.type == TransactionType.credit
+                                    ? Colors.green
+                                    : Colors.red,
+                              ),
+                            ),
+                            title: Text(transaction.description),
+                            subtitle: Text(
+                              _formatDateTime(transaction.date),
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                              ),
+                            ),
+                            trailing: Text(
+                              '${transaction.type == TransactionType.credit ? '+' : '-'} ${transaction.amount} ج.م',
+                              style: TextStyle(
+                                color: transaction.type == TransactionType.credit
+                                    ? Colors.green
+                                    : Colors.red,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatDateTime(DateTime dateTime) {
+    return '${dateTime.year}/${dateTime.month}/${dateTime.day} ${dateTime.hour}:${dateTime.minute}';
   }
 }
 
