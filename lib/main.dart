@@ -148,9 +148,9 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          _selectedIndex == 0 ? 'الرئيسية' : 'الأشخاص',
-          style: const TextStyle(
+        title: const Text(
+          'المحفظة',
+          style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 24,
           ),
@@ -167,307 +167,268 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      body: IndexedStack(
-        index: _selectedIndex,
+      body: Column(
         children: [
-          // شاشة المعاملات
-          SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // بطاقة الرصيد
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'الرصيد الكلي',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            '$totalBalance ج.م',
-                            style: const TextStyle(
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              _buildQuickAction(
-                                context: context,
-                                icon: Icons.add,
-                                label: 'إضافة معاملة',
-                                onTap: _showAddTransactionDialog,
-                              ),
-                              _buildQuickAction(
-                                context: context,
-                                icon: Icons.person_add,
-                                label: 'إضافة شخص',
-                                onTap: () => _showAddPersonDialog(),
-                              ),
-                              _buildQuickAction(
-                                context: context,
-                                icon: Icons.filter_list,
-                                label: 'تصفية',
-                                onTap: () {
-                                  setState(() {
-                                    _showFilter = !_showFilter;
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
-                        ],
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'الرصيد الكلي',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 24),
-                  if (_showFilter)
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: SegmentedButton<TransactionType>(
-                          style: ButtonStyle(
-                            backgroundColor: WidgetStateProperty.resolveWith<Color>(
-                              (states) {
-                                if (states.contains(WidgetState.selected)) {
-                                  return Theme.of(context).colorScheme.primary;
-                                }
-                                return Theme.of(context).colorScheme.surface;
-                              },
-                            ),
-                          ),
-                          segments: const [
-                            ButtonSegment(
-                              value: TransactionType.credit,
-                              label: Text('دائن'),
-                              icon: Icon(Icons.arrow_upward),
-                            ),
-                            ButtonSegment(
-                              value: TransactionType.debit,
-                              label: Text('مدين'),
-                              icon: Icon(Icons.arrow_downward),
-                            ),
-                          ],
-                          selected: {_filterType},
-                          onSelectionChanged: (Set<TransactionType> newSelection) {
-                            setState(() {
-                              _filterType = newSelection.first;
-                            });
-                          },
+                    Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.person_add),
+                          onPressed: () => _showAddPersonDialog(),
+                          tooltip: 'إضافة شخص',
                         ),
-                      ),
+                        IconButton(
+                          icon: const Icon(Icons.add),
+                          onPressed: _showAddTransactionDialog,
+                          tooltip: 'إضافة معاملة',
+                        ),
+                      ],
                     ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'العملاء',
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '${totalBalance.abs()} ج.م ${totalBalance >= 0 ? 'دائن' : 'مدين'}',
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: totalBalance >= 0 ? Colors.green : Colors.red,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Text(
+                  'الأشخاص',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    '${people.length}',
                     style: TextStyle(
-                      fontSize: 20,
+                      fontSize: 16,
                       fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  // كروت العملاء
-                  people.isEmpty
-                      ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.people_outline,
-                                size: 64,
-                                color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                'لا يوجد عملاء',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  color: Theme.of(context).colorScheme.onSurface,
-                                ),
-                              ),
-                            ],
+                ),
+                const Spacer(),
+                TextButton.icon(
+                  onPressed: () {
+                    setState(() {
+                      _showFilter = !_showFilter;
+                    });
+                  },
+                  icon: const Icon(Icons.filter_list),
+                  label: const Text('تصفية'),
+                ),
+              ],
+            ),
+          ),
+          if (_showFilter)
+            Card(
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              child: Padding(
+                padding: const EdgeInsets.all(8),
+                child: SegmentedButton<TransactionType>(
+                  style: ButtonStyle(
+                    backgroundColor: WidgetStateProperty.resolveWith<Color>(
+                      (states) {
+                        if (states.contains(WidgetState.selected)) {
+                          return Theme.of(context).colorScheme.primary;
+                        }
+                        return Theme.of(context).colorScheme.surface;
+                      },
+                    ),
+                  ),
+                  segments: const [
+                    ButtonSegment<TransactionType>(
+                      value: TransactionType.credit,
+                      label: Text('دائن'),
+                    ),
+                    ButtonSegment<TransactionType>(
+                      value: TransactionType.debit,
+                      label: Text('مدين'),
+                    ),
+                  ],
+                  selected: {_filterType},
+                  onSelectionChanged: (Set<TransactionType> newSelection) {
+                    setState(() {
+                      _filterType = newSelection.first;
+                    });
+                  },
+                ),
+              ),
+            ),
+          Expanded(
+            child: people.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.people_outline,
+                          size: 64,
+                          color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'لا يوجد أشخاص',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
-                        )
-                      : GridView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            childAspectRatio: 0.85,
-                            crossAxisSpacing: 16,
-                            mainAxisSpacing: 16,
-                          ),
-                          itemCount: people.length,
-                          itemBuilder: (context, index) {
-                            final person = people[index];
-                            final personTransactions = transactions.where((t) => t.person == person).toList();
-                            double balance = 0;
-                            for (var transaction in personTransactions) {
-                              if (transaction.type == TransactionType.credit) {
-                                balance += transaction.amount;
-                              } else {
-                                balance -= transaction.amount;
-                              }
-                            }
+                        ),
+                        const SizedBox(height: 8),
+                        ElevatedButton.icon(
+                          onPressed: () => _showAddPersonDialog(),
+                          icon: const Icon(Icons.person_add),
+                          label: const Text('إضافة شخص'),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    itemCount: people.length,
+                    itemBuilder: (context, index) {
+                      final person = people[index];
+                      final personTransactions = transactions.where((t) => t.person == person).toList();
+                      double balance = 0;
+                      for (var transaction in personTransactions) {
+                        if (transaction.type == TransactionType.credit) {
+                          balance += transaction.amount;
+                        } else {
+                          balance -= transaction.amount;
+                        }
+                      }
 
-                            return Card(
-                              child: InkWell(
-                                onTap: () {
-                                  _showPersonDetails(person);
-                                },
-                                borderRadius: BorderRadius.circular(24),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(16),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Container(
-                                        width: 64,
-                                        height: 64,
-                                        decoration: BoxDecoration(
-                                          color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: Center(
-                                          child: Text(
-                                            person.name[0],
-                                            style: TextStyle(
-                                              fontSize: 24,
-                                              fontWeight: FontWeight.bold,
-                                              color: Theme.of(context).colorScheme.primary,
-                                            ),
-                                          ),
-                                        ),
+                      if (_showFilter) {
+                        if (_filterType == TransactionType.credit && balance < 0) {
+                          return const SizedBox.shrink();
+                        }
+                        if (_filterType == TransactionType.debit && balance > 0) {
+                          return const SizedBox.shrink();
+                        }
+                      }
+
+                      return Card(
+                        child: InkWell(
+                          onTap: () {
+                            _showPersonDetails(person);
+                          },
+                          borderRadius: BorderRadius.circular(12),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 48,
+                                  height: 48,
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      person.name[0],
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        color: Theme.of(context).colorScheme.primary,
                                       ),
-                                      const SizedBox(height: 16),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
                                       Text(
                                         person.name,
                                         style: const TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.bold,
                                         ),
-                                        textAlign: TextAlign.center,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
                                       ),
                                       if (person.phone != null) ...[
                                         const SizedBox(height: 4),
                                         Text(
                                           person.phone!,
                                           style: TextStyle(
-                                            fontSize: 12,
+                                            fontSize: 14,
                                             color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                                           ),
-                                          textAlign: TextAlign.center,
                                         ),
                                       ],
-                                      const SizedBox(height: 12),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                        decoration: BoxDecoration(
-                                          color: (balance >= 0 ? Colors.green : Colors.red).withOpacity(0.1),
-                                          borderRadius: BorderRadius.circular(16),
-                                        ),
-                                        child: Text(
-                                          '${balance.abs()} ج.م',
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                            color: balance >= 0 ? Colors.green : Colors.red,
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        balance >= 0 ? 'دائن' : 'مدين',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                                        ),
-                                      ),
                                     ],
                                   ),
                                 ),
-                              ),
-                            );
-                          },
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      '${balance.abs()} ج.م',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: balance >= 0 ? Colors.green : Colors.red,
+                                      ),
+                                    ),
+                                    Text(
+                                      balance >= 0 ? 'دائن' : 'مدين',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
-                ],
-              ),
-            ),
-          ),
-          // شاشة الأشخاص
-          PeopleScreen(
-            people: people,
-            onAdd: _addPerson,
-            onDelete: _deletePerson,
+                      );
+                    },
+                  ),
           ),
         ],
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _selectedIndex,
-        onDestinationSelected: (index) {
-          setState(() {
-            _selectedIndex = index;
-          });
-        },
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.dashboard_rounded),
-            label: 'الرئيسية',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.people_rounded),
-            label: 'الأشخاص',
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildQuickAction({
-    required BuildContext context,
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          children: [
-            Icon(
-              icon,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
-            ),
-          ],
-        ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showAddTransactionDialog,
+        child: const Icon(Icons.add),
       ),
     );
   }
