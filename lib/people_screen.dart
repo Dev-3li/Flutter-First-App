@@ -39,7 +39,7 @@ class PeopleScreen extends StatelessWidget {
                     'لا يوجد أشخاص',
                     style: TextStyle(
                       fontSize: 18,
-                      color: Theme.of(context).colorScheme.onBackground,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                 ],
