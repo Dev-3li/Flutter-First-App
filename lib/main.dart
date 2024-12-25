@@ -107,12 +107,6 @@ class _HomePageState extends State<HomePage> {
     return total;
   }
 
-  void _addPerson(Person person) {
-    setState(() {
-      people.add(person);
-    });
-  }
-
   void _addTransaction(Transaction transaction) {
     setState(() {
       transactions.add(transaction);
@@ -499,12 +493,14 @@ class _HomePageState extends State<HomePage> {
           FilledButton(
             onPressed: () {
               if (nameController.text.isNotEmpty) {
-                _addPerson(
-                  Person(
-                    name: nameController.text,
-                    phone: phoneController.text.isEmpty ? null : phoneController.text,
-                  ),
-                );
+                setState(() {
+                  people.add(
+                    Person(
+                      name: nameController.text,
+                      phone: phoneController.text.isEmpty ? null : phoneController.text,
+                    ),
+                  );
+                });
                 Navigator.pop(context);
                 _showAddTransactionDialog();
               }
