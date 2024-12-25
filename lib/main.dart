@@ -28,7 +28,7 @@ class _MyAppState extends State<MyApp> {
       title: 'إدارة العمليات المالية',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.green,
+          seedColor: const Color(0xFF4CAF50),
           brightness: Brightness.light,
         ),
         useMaterial3: true,
@@ -36,9 +36,14 @@ class _MyAppState extends State<MyApp> {
       ),
       darkTheme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.green,
+          seedColor: const Color(0xFF4CAF50),
           brightness: Brightness.dark,
+          background: const Color(0xFF1A1A1A),
+          surface: const Color(0xFF252525),
+          primary: const Color(0xFF4CAF50),
+          secondary: const Color(0xFF66BB6A),
         ),
+        scaffoldBackgroundColor: const Color(0xFF1A1A1A),
         useMaterial3: true,
         fontFamily: 'Cairo',
       ),
@@ -87,7 +92,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _deletePerson(Person person) {
-    // التحقق من عدم وجود معاملات للشخص
     final hasTransactions = transactions.any((t) => t.person == person);
     if (hasTransactions) {
       showDialog(
@@ -124,7 +128,6 @@ class _HomePageState extends State<HomePage> {
         ),
         centerTitle: true,
         actions: [
-          // زر تبديل الثيم
           IconButton(
             icon: Icon(
               isDark ? Icons.light_mode : Icons.dark_mode,
@@ -146,7 +149,6 @@ class _HomePageState extends State<HomePage> {
       body: IndexedStack(
         index: _selectedIndex,
         children: [
-          // شاشة المعاملات
           Column(
             children: [
               if (_showFilter)
@@ -174,80 +176,110 @@ class _HomePageState extends State<HomePage> {
                     },
                   ),
                 ),
-              // الرصيد الإجمالي
-              Container(
-                padding: const EdgeInsets.all(20),
-                margin: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      'الرصيد الإجمالي',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.onPrimaryContainer,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      '$totalBalance ج.م',
-                      style: TextStyle(
-                        fontSize: 30,
-                        fontWeight: FontWeight.bold,
-                        color: totalBalance >= 0 ? Colors.green : Colors.red,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // قائمة المعاملات
               Expanded(
-                child: transactions.isEmpty
-                    ? const Center(
-                        child: Text(
-                          'لا توجد معاملات',
-                          style: TextStyle(fontSize: 18),
+                child: people.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.people_outline,
+                              size: 64,
+                              color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'لا يوجد عملاء',
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
+                          ],
                         ),
                       )
-                    : ListView.builder(
-                        itemCount: transactions.length,
+                    : GridView.builder(
+                        padding: const EdgeInsets.all(16),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: 1,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                        ),
+                        itemCount: people.length,
                         itemBuilder: (context, index) {
-                          final transaction = transactions[index];
-                          if (_showFilter && transaction.type != _filterType) {
-                            return const SizedBox.shrink();
+                          final person = people[index];
+                          final personTransactions = transactions.where((t) => t.person == person).toList();
+                          double balance = 0;
+                          for (var transaction in personTransactions) {
+                            if (transaction.type == TransactionType.credit) {
+                              balance += transaction.amount;
+                            } else {
+                              balance -= transaction.amount;
+                            }
                           }
+
                           return Card(
-                            margin: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 5,
-                            ),
-                            child: ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor: transaction.type == TransactionType.credit
-                                    ? Colors.green
-                                    : Colors.red,
-                                child: Icon(
-                                  transaction.type == TransactionType.credit
-                                      ? Icons.arrow_circle_up
-                                      : Icons.arrow_circle_down,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              title: Text(transaction.description),
-                              subtitle: Text(
-                                '${transaction.person.name} - ${_formatDate(transaction.date)}',
-                              ),
-                              trailing: Text(
-                                '${transaction.type == TransactionType.credit ? '+' : '-'} ${transaction.amount} ج.م',
-                                style: TextStyle(
-                                  color: transaction.type == TransactionType.credit
-                                      ? Colors.green
-                                      : Colors.red,
-                                  fontWeight: FontWeight.bold,
+                            elevation: 4,
+                            child: InkWell(
+                              onTap: () {
+                                // TODO: عرض تفاصيل العميل
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 30,
+                                      backgroundColor: Theme.of(context).colorScheme.primary,
+                                      child: Text(
+                                        person.name[0],
+                                        style: TextStyle(
+                                          fontSize: 24,
+                                          color: Theme.of(context).colorScheme.onPrimary,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Text(
+                                      person.name,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    if (person.phone != null) ...[
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        person.phone!,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ],
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      '${balance.abs()} ج.م',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: balance >= 0 ? Colors.green : Colors.red,
+                                      ),
+                                    ),
+                                    Text(
+                                      balance >= 0 ? 'دائن' : 'مدين',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
@@ -257,7 +289,6 @@ class _HomePageState extends State<HomePage> {
               ),
             ],
           ),
-          // شاشة الأشخاص
           PeopleScreen(
             people: people,
             onAdd: _addPerson,
@@ -274,8 +305,8 @@ class _HomePageState extends State<HomePage> {
         },
         destinations: const [
           NavigationDestination(
-            icon: Icon(Icons.swap_horiz),
-            label: 'المعاملات',
+            icon: Icon(Icons.dashboard),
+            label: 'الرئيسية',
           ),
           NavigationDestination(
             icon: Icon(Icons.people),
@@ -283,14 +314,16 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      floatingActionButton: _selectedIndex == 0
-          ? FloatingActionButton(
-              onPressed: () {
-                _showAddTransactionDialog();
-              },
-              child: const Icon(Icons.add),
-            )
-          : null,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          if (_selectedIndex == 0) {
+            _showAddTransactionDialog();
+          } else {
+            _showAddPersonDialog();
+          }
+        },
+        child: Icon(_selectedIndex == 0 ? Icons.add : Icons.person_add),
+      ),
     );
   }
 
@@ -383,7 +416,6 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-// نموذج المعاملة
 class Transaction {
   final String description;
   final double amount;
@@ -399,13 +431,11 @@ class Transaction {
   }) : date = DateTime.now();
 }
 
-// نوع المعاملة
 enum TransactionType {
-  credit, // دائن
-  debit, // مدين
+  credit,
+  debit,
 }
 
-// نموذج الشخص
 class Person {
   final String name;
   final String? phone;
