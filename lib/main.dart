@@ -92,21 +92,27 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  double totalBalance = 0;
-  List<Transaction> transactions = [];
-  List<Person> people = [];
   int _selectedIndex = 0;
-  TransactionType _filterType = TransactionType.credit;
   bool _showFilter = false;
+  TransactionType _filterType = TransactionType.credit;
+  final List<Transaction> transactions = [];
+  final List<Person> people = [];
+
+  double get totalBalance {
+    double total = 0;
+    for (var transaction in transactions) {
+      if (transaction.type == TransactionType.credit) {
+        total += transaction.amount;
+      } else {
+        total -= transaction.amount;
+      }
+    }
+    return total;
+  }
 
   void _addTransaction(Transaction transaction) {
     setState(() {
       transactions.add(transaction);
-      if (transaction.type == TransactionType.credit) {
-        totalBalance += transaction.amount;
-      } else {
-        totalBalance -= transaction.amount;
-      }
     });
   }
 
@@ -154,8 +160,10 @@ class _HomePageState extends State<HomePage> {
         actions: [
           IconButton(
             icon: Icon(
-              _themeMode == ThemeMode.dark ? Icons.light_mode : Icons.dark_mode,
-              color: Theme.of(context).colorScheme.onBackground,
+              Theme.of(context).brightness == Brightness.dark 
+                  ? Icons.light_mode 
+                  : Icons.dark_mode,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
             onPressed: widget.toggleTheme,
           ),
@@ -198,19 +206,19 @@ class _HomePageState extends State<HomePage> {
                             mainAxisAlignment: MainAxisAlignment.spaceAround,
                             children: [
                               _buildQuickAction(
-                                context,
+                                context: context,
                                 icon: Icons.add,
                                 label: 'إضافة معاملة',
                                 onTap: _showAddTransactionDialog,
                               ),
                               _buildQuickAction(
-                                context,
+                                context: context,
                                 icon: Icons.person_add,
                                 label: 'إضافة شخص',
-                                onTap: _showAddPersonDialog,
+                                onTap: () => _showAddPersonDialog(),
                               ),
                               _buildQuickAction(
-                                context,
+                                context: context,
                                 icon: Icons.filter_list,
                                 label: 'تصفية',
                                 onTap: () {
@@ -232,9 +240,9 @@ class _HomePageState extends State<HomePage> {
                         padding: const EdgeInsets.all(8),
                         child: SegmentedButton<TransactionType>(
                           style: ButtonStyle(
-                            backgroundColor: MaterialStateProperty.resolveWith<Color>(
+                            backgroundColor: WidgetStateProperty.resolveWith<Color>(
                               (states) {
-                                if (states.contains(MaterialState.selected)) {
+                                if (states.contains(WidgetState.selected)) {
                                   return Theme.of(context).colorScheme.primary;
                                 }
                                 return Theme.of(context).colorScheme.surface;
