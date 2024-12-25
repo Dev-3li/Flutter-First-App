@@ -6,8 +6,21 @@ void main() {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  ThemeMode _themeMode = ThemeMode.light;
+
+  void toggleTheme() {
+    setState(() {
+      _themeMode = _themeMode == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,14 +34,28 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
         fontFamily: 'Cairo',
       ),
+      darkTheme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.green,
+          brightness: Brightness.dark,
+        ),
+        useMaterial3: true,
+        fontFamily: 'Cairo',
+      ),
+      themeMode: _themeMode,
       debugShowCheckedModeBanner: false,
-      home: const HomePage(),
+      home: HomePage(toggleTheme: toggleTheme),
     );
   }
 }
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final VoidCallback toggleTheme;
+
+  const HomePage({
+    super.key,
+    required this.toggleTheme,
+  });
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -86,6 +113,8 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.primary,
@@ -94,19 +123,25 @@ class _HomePageState extends State<HomePage> {
           style: const TextStyle(color: Colors.white),
         ),
         centerTitle: true,
-        actions: _selectedIndex == 0
-            ? [
-                IconButton(
-                  icon: const Icon(Icons.filter_list),
-                  color: Colors.white,
-                  onPressed: () {
-                    setState(() {
-                      _showFilter = !_showFilter;
-                    });
-                  },
-                ),
-              ]
-            : null,
+        actions: [
+          // زر تبديل الثيم
+          IconButton(
+            icon: Icon(
+              isDark ? Icons.light_mode : Icons.dark_mode,
+              color: Colors.white,
+            ),
+            onPressed: widget.toggleTheme,
+          ),
+          if (_selectedIndex == 0)
+            IconButton(
+              icon: const Icon(Icons.filter_list, color: Colors.white),
+              onPressed: () {
+                setState(() {
+                  _showFilter = !_showFilter;
+                });
+              },
+            ),
+        ],
       ),
       body: IndexedStack(
         index: _selectedIndex,
@@ -149,11 +184,12 @@ class _HomePageState extends State<HomePage> {
                 ),
                 child: Column(
                   children: [
-                    const Text(
+                    Text(
                       'الرصيد الإجمالي',
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.onPrimaryContainer,
                       ),
                     ),
                     const SizedBox(height: 10),

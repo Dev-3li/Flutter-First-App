@@ -25,10 +25,24 @@ class PeopleScreen extends StatelessWidget {
         centerTitle: true,
       ),
       body: people.isEmpty
-          ? const Center(
-              child: Text(
-                'لا يوجد أشخاص',
-                style: TextStyle(fontSize: 18),
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.people_outline,
+                    size: 64,
+                    color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'لا يوجد أشخاص',
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Theme.of(context).colorScheme.onBackground,
+                    ),
+                  ),
+                ],
               ),
             )
           : ListView.builder(
@@ -45,11 +59,28 @@ class PeopleScreen extends StatelessWidget {
                       backgroundColor: Theme.of(context).colorScheme.primary,
                       child: Text(
                         person.name[0],
-                        style: const TextStyle(color: Colors.white),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onPrimary,
+                        ),
                       ),
                     ),
-                    title: Text(person.name),
-                    subtitle: person.phone != null ? Text(person.phone!) : null,
+                    title: Text(
+                      person.name,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                    subtitle: person.phone != null
+                        ? Text(
+                            person.phone!,
+                            style: TextStyle(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withOpacity(0.6),
+                            ),
+                          )
+                        : null,
                     trailing: IconButton(
                       icon: const Icon(Icons.delete),
                       color: Colors.red,
