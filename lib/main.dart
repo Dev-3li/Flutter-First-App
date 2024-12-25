@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'add_transaction.dart';
 
 void main() {
   runApp(const MyApp());
@@ -10,42 +11,47 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'تطبيقي الأول',
+      title: 'إدارة العمليات المالية',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.teal,
+          seedColor: Colors.green,
           brightness: Brightness.light,
         ),
         useMaterial3: true,
         fontFamily: 'Cairo',
       ),
       debugShowCheckedModeBanner: false,
-      home: const MyHomePage(title: 'تطبيقي الأول'),
+      home: const HomePage(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<HomePage> createState() => _HomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _HomePageState extends State<HomePage> {
+  double totalBalance = 0;
+  List<Transaction> transactions = [];
+  List<Person> people = [];
 
-  void _incrementCounter() {
+  void _addTransaction(Transaction transaction) {
     setState(() {
-      _counter++;
+      transactions.add(transaction);
+      if (transaction.type == TransactionType.credit) {
+        totalBalance += transaction.amount;
+      } else {
+        totalBalance -= transaction.amount;
+      }
     });
   }
 
-  void _decrementCounter() {
+  void _addPerson(Person person) {
     setState(() {
-      if (_counter > 0) _counter--;
+      people.add(person);
     });
   }
 
@@ -54,56 +60,212 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.primary,
-        title: Text(
-          widget.title,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+        title: const Text(
+          'إدارة العمليات المالية',
+          style: TextStyle(color: Colors.white),
         ),
         centerTitle: true,
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              'عدد الضغطات:',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+      body: Column(
+        children: [
+          // الرصيد الإجمالي
+          Container(
+            padding: const EdgeInsets.all(20),
+            margin: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primaryContainer,
+              borderRadius: BorderRadius.circular(15),
             ),
-            const SizedBox(height: 20),
-            Text(
-              '$_counter',
-              style: const TextStyle(
-                fontSize: 48,
-                fontWeight: FontWeight.bold,
-                color: Colors.teal,
-              ),
-            ),
-            const SizedBox(height: 30),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            child: Column(
               children: [
-                FloatingActionButton(
-                  onPressed: _incrementCounter,
-                  tooltip: 'زيادة',
-                  child: const Icon(Icons.add),
+                const Text(
+                  'الرصيد الإجمالي',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-                const SizedBox(width: 20),
-                FloatingActionButton(
-                  onPressed: _decrementCounter,
-                  tooltip: 'نقص',
-                  backgroundColor: Colors.red,
-                  child: const Icon(Icons.remove),
+                const SizedBox(height: 10),
+                Text(
+                  '$totalBalance ج.م',
+                  style: TextStyle(
+                    fontSize: 30,
+                    fontWeight: FontWeight.bold,
+                    color: totalBalance >= 0 ? Colors.green : Colors.red,
+                  ),
                 ),
               ],
             ),
-          ],
-        ),
+          ),
+          // قائمة المعاملات
+          Expanded(
+            child: transactions.isEmpty
+                ? const Center(
+                    child: Text(
+                      'لا توجد معاملات',
+                      style: TextStyle(fontSize: 18),
+                    ),
+                  )
+                : ListView.builder(
+                    itemCount: transactions.length,
+                    itemBuilder: (context, index) {
+                      final transaction = transactions[index];
+                      return Card(
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
+                        child: ListTile(
+                          leading: Icon(
+                            transaction.type == TransactionType.credit
+                                ? Icons.arrow_circle_up
+                                : Icons.arrow_circle_down,
+                            color: transaction.type == TransactionType.credit
+                                ? Colors.green
+                                : Colors.red,
+                          ),
+                          title: Text(transaction.description),
+                          subtitle: Text(transaction.person.name),
+                          trailing: Text(
+                            '${transaction.type == TransactionType.credit ? '+' : '-'} ${transaction.amount} ج.م',
+                            style: TextStyle(
+                              color: transaction.type == TransactionType.credit
+                                  ? Colors.green
+                                  : Colors.red,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // إضافة معاملة جديدة
+          _showAddTransactionDialog();
+        },
+        child: const Icon(Icons.add),
       ),
     );
   }
+
+  void _showAddTransactionDialog() {
+    if (people.isEmpty) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('تنبيه'),
+          content: const Text('الرجاء إضافة شخص أولاً'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _showAddPersonDialog();
+              },
+              child: const Text('إضافة شخص'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) => AddTransactionDialog(
+        people: people,
+        onAdd: _addTransaction,
+      ),
+    );
+  }
+
+  void _showAddPersonDialog() {
+    final nameController = TextEditingController();
+    final phoneController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('إضافة شخص جديد'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(
+                labelText: 'الاسم',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: phoneController,
+              decoration: const InputDecoration(
+                labelText: 'رقم الهاتف (اختياري)',
+                border: OutlineInputBorder(),
+              ),
+              keyboardType: TextInputType.phone,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('إلغاء'),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (nameController.text.isNotEmpty) {
+                _addPerson(
+                  Person(
+                    name: nameController.text,
+                    phone: phoneController.text.isEmpty ? null : phoneController.text,
+                  ),
+                );
+                Navigator.pop(context);
+                _showAddTransactionDialog();
+              }
+            },
+            child: const Text('إضافة'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// نموذج المعاملة
+class Transaction {
+  final String description;
+  final double amount;
+  final DateTime date;
+  final TransactionType type;
+  final Person person;
+
+  Transaction({
+    required this.description,
+    required this.amount,
+    required this.type,
+    required this.person,
+  }) : date = DateTime.now();
+}
+
+// نوع المعاملة
+enum TransactionType {
+  credit, // دائن
+  debit, // مدين
+}
+
+// نموذج الشخص
+class Person {
+  final String name;
+  final String? phone;
+
+  Person({
+    required this.name,
+    this.phone,
+  });
 }
