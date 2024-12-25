@@ -90,7 +90,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  int _selectedIndex = 0;
   bool _showFilter = false;
   TransactionType _filterType = TransactionType.credit;
   final List<Transaction> transactions = [];
@@ -108,15 +107,15 @@ class _HomePageState extends State<HomePage> {
     return total;
   }
 
-  void _addTransaction(Transaction transaction) {
-    setState(() {
-      transactions.add(transaction);
-    });
-  }
-
   void _addPerson(Person person) {
     setState(() {
       people.add(person);
+    });
+  }
+
+  void _addTransaction(Transaction transaction) {
+    setState(() {
+      transactions.add(transaction);
     });
   }
 
